@@ -20,12 +20,15 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Install Android SDK 36.1 & accept licenses
         run: |
-          SDKM=$(command -v sdkmanager || find "$ANDROID_HOME" -name sdkmanager -type f | head -n 1)
+          SDK_ROOT="${ANDROID_HOME:-/usr/local/lib/android/sdk}"
+          echo "ANDROID_HOME=$SDK_ROOT" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$SDK_ROOT" >> "$GITHUB_ENV"
+          SDKM="$SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKM" ]; then
+            SDKM=$(find "$SDK_ROOT" -name sdkmanager -type f | head -n 1)
+          fi
           echo "Using sdkmanager: $SDKM"
           yes | "$SDKM" --licenses > /dev/null 2>&1 || true
           "$SDKM" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
