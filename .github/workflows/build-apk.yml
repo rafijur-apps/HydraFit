@@ -20,21 +20,23 @@ jobs:
           distribution: temurin
           java-version: '21'
 
-      - name: Set up Android SDK and accept licenses
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK 36.1 & Build Tools 36
+      - name: Install Android SDK 36.1 & accept licenses
         run: |
-          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" \
-            "platform-tools" \
-            "platforms;android-36.1" \
-            "build-tools;36.0.0"
+          SDKM=$(command -v sdkmanager || find "$ANDROID_HOME" -name sdkmanager -type f | head -n 1)
+          echo "Using sdkmanager: $SDKM"
+          yes | "$SDKM" --licenses > /dev/null 2>&1 || true
+          "$SDKM" "platform-tools" "platforms;android-36" "build-tools;36.0.0"
+          "$SDKM" "platforms;android-36.1" || true
 
-      - name: Set up Gradle 9.3.1
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '9.3.1'
+      - name: Install Gradle 9.3.1
+        run: |
+          curl -fsSL https://services.gradle.org/distributions/gradle-9.3.1-bin.zip -o /tmp/gradle.zip
+          sudo unzip -q /tmp/gradle.zip -d /opt
+          sudo ln -sf /opt/gradle-9.3.1/bin/gradle /usr/local/bin/gradle
+          gradle --version
 
       - name: Generate debug keystore for CI build
         run: |
